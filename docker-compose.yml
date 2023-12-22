@@ -1,0 +1,63 @@
+services:
+
+  app:
+    image: 'node:latest'
+    build: 
+      context: ./project-FOODAPP-front/
+      dockerfile: Dockerfile
+    expose:
+      - 80
+    ports:
+      - "4200:80"
+    container_name: app
+    depends_on:
+      - api
+    
+    networks:
+      - frontend-network
+
+  api:
+    image: 'docker-spring-boot-postgres:latest'
+    build: 
+      context: ./project-FOODAPP-back/
+      dockerfile: Dockerfile
+    expose:
+      - 8080
+    ports:
+      - "8080:80"
+    container_name: api
+    depends_on:
+      - db
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/project-FOODAPI-back
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    
+    networks:
+      - frontend-network
+      - backend-network
+
+  db:
+    image: 'postgres'
+    expose:
+      - 5432
+    ports:
+      - "5432:5432"
+    container_name: db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - backend-network
+
+volumes:
+  postgres-data:
+
+networks:
+  frontend-network:
+  backend-network:
